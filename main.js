@@ -3,85 +3,48 @@ var nflBody = document.getElementById('nflBody');
 var navLinks = document.getElementsByClassName('navLinks');
 var booksRow = document.getElementsByClassName('booksRow')[0];
 var nflRow = document.getElementsByClassName('nflRow')[0];
-
-
-
-createBooks();
-createNfl();
+var tab = document.getElementsByTagName('table')[0];
 
 
 for (var i = 0; i < navLinks.length; i++) {
-	navLinks[i].addEventListener('click',switchDisplay);
+	navLinks[i].addEventListener('click',display);
 }
 
-
-function switchDisplay(e) {
+function display(e) {
 	e.preventDefault();
-	var data = this.getAttribute('href');
-	console.log(data);
-	if (data === "books") {
-		booksRow.style.display = 'block';
-		nflRow.style.display = 'none';
-	}else{
-		booksRow.style.display = 'none';
-		nflRow.style.display = 'block';
-	}
-}
-
-function createNfl() {
+	var link = this.getAttribute('href');
 	var xml = new XMLHttpRequest();
-	xml.open('GET', "http://mysafeinfo.com/api/data?list=nflseasonscores2015-2016&format=json");
-
-	xml.addEventListener('readystatechange', function() {
+	xml.open('get',link);
+	xml.addEventListener('readystatechange',function () {
 		if (xml.readyState == 4 && xml.status == 200) {
-			displayNflData(xml);
+			createTable(xml)
 		}
 	})
 	xml.send();
-}
+	}
 
-function createBooks() {
-	var xml = new XMLHttpRequest();
-	xml.open('GET', "http://mysafeinfo.com/api/data?list=bestnovels&format=json");
+	function createTable(xml) {
+		var data = JSON.parse(xml.responseText);
+		var first = data[0];
+		var headText = `<thead><tr>`;
 
-	xml.addEventListener('readystatechange', function() {
-		if (xml.readyState == 4 && xml.status == 200) {
-			displayData(xml);
+		for(prop in first){
+			headText += `<th>${prop}</th>`;
 		}
-	})
-	xml.send();
-}
 
 
-function displayData(xml) {
-	var data = JSON.parse(xml.responseText);
-	var text = ``;
-	for (var i = 0; i < data.length; i++) {
-		text += `
-		<tr>
-			<td>${data[i].rank}</td>
-			<td>${data[i].au}</td>
-			<td>${data[i].tt}</td>
-			<td>${data[i].yr}</td>
-		</tr>
-		`
+		headText += `</tr></thead>`;
+		tab.innerHTML = headText;
+		var texxBody = `<tbody>`;
+			for (var i = 0; i < data.length; i++) {
+				texxBody += `<tr>`
+				for(prop in data[i]){
+					texxBody += `<td>${data[i][prop]}</td>`
+				}
+				texxBody += `</tr>`;
+			}
+
+		texxBody += `</tbody>`;
+		tab.innerHTML += texxBody;
+
 	}
-	booksBody.innerHTML = text;
-}
-
-function displayNflData(xml) {
-	var data = JSON.parse(xml.responseText);
-	console.log(data);
-	var text = ``;
-	for (var i = 0; i < data.length; i++) {
-		text += `
-		<tr>
-			<td>${data[i].yr}</td>
-			<td>${data[i].dy}</td>
-			<td>${data[i].vis}</td>
-			<td>${data[i].hom}</td>
-		</tr>
-		`
-	}
-	nflBody.innerHTML = text;
-}
